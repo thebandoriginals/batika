@@ -31,7 +31,7 @@ const Footer = () => {
                 <Stack direction={{ xs: 'column', md: 'row' }} gap={5} sx={{ mb: 5 }}>
                     <Box sx={{ flex: 1 }}>
                         <Typography gutterBottom variant='h6'>ABOUT US</Typography>
-                        <Typography gutterBottom>At Batika, we believe that fashion is not just about clothing; it's a statement of individuality and self-expression.</Typography>
+                        <Typography gutterBottom>At Batica, we believe that fashion is not just about clothing; it's a statement of individuality and self-expression.</Typography>
                         <Stack gap={1} sx={{ mt: 3 }}>
                             <Stack direction='row' gap={0.5}>
                                 <Typography variant='caption' fontWeight='600'>Operation Hours:</Typography>
@@ -43,7 +43,7 @@ const Footer = () => {
                             </Stack>
                             <Stack direction='row' gap={0.5}>
                                 <Typography variant='caption' fontWeight='600'>Email Address:</Typography>
-                                <Typography variant='caption'>info@batika.co.ke</Typography>
+                                <Typography variant='caption'>info@batica.co.ke</Typography>
                             </Stack>
                         </Stack>
                     </Box>
@@ -78,7 +78,7 @@ const Footer = () => {
                         </Stack>
                     </Stack>
                 </Stack>
-                <Typography color='text.secondary' variant="caption">Copyright © 2023 Batika</Typography>
+                <Typography color='text.secondary' variant="caption">Copyright © 2023 Batica</Typography>
             </Stack>
         </Container>
     </div>
