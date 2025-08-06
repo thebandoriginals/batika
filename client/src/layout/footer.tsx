@@ -39,11 +39,11 @@ const Footer = () => {
                             </Stack>
                             <Stack direction='row' gap={0.5}>
                                 <Typography variant='caption' fontWeight='600'>Phone Number:</Typography>
-                                <Typography variant='caption'>0700750972</Typography>
+                                <Typography variant='caption'>0798705683 / 0702853169</Typography>
                             </Stack>
                             <Stack direction='row' gap={0.5}>
                                 <Typography variant='caption' fontWeight='600'>Email Address:</Typography>
-                                <Typography variant='caption'>info@batica.co.ke</Typography>
+                                <Typography variant='caption'>baticabrandings73@gmail.com</Typography>
                             </Stack>
                         </Stack>
                     </Box>
@@ -78,7 +78,7 @@ const Footer = () => {
                         </Stack>
                     </Stack>
                 </Stack>
-                <Typography color='text.secondary' variant="caption">Copyright © 2023 Batica</Typography>
+                <Typography color='text.secondary' variant="caption">Copyright © {new Date().getFullYear()} Batica</Typography>
             </Stack>
         </Container>
     </div>
