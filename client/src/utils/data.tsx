@@ -1,4 +1,4 @@
-export const SIZES = ['Small', 'Medium', 'Large'];
+export const SIZES = ['Small', 'Medium', 'Large', 'XL'];
 
 export const COLORS = ['White', 'Black', 'Red', 'Green', 'Blue', 'Yellow']
 
