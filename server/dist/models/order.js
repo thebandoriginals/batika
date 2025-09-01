@@ -8,10 +8,11 @@ const Schema = mongoose_1.default.Schema;
 const orderSchema = new Schema({
     number: { type: Number, required: true },
     customer: {
-        _id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        _id: { type: Schema.Types.ObjectId, ref: 'User', content: Schema.Types.Mixed },
         firstName: { type: String, required: true },
         lastName: { type: String, required: true },
         email: { type: String, required: true },
+        phone: { type: String, content: Schema.Types.Mixed }
     },
     status: { type: String, default: 'Pending' },
     products: [{
