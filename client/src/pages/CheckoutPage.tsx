@@ -7,20 +7,63 @@ import { ArrowBackIos } from "@mui/icons-material";
 import { formatNumber } from "../utils/utilities";
 import { useAuthContext } from "../auth/auth-context";
 import { useNavigate } from "react-router-dom";
-import PaymentDialog from "../sections/payment/payment-dialog";
+// import PaymentDialog from "../sections/payment/payment-dialog";
 import { LoadingButton } from "@mui/lab";
+import { usePaystackPayment } from 'react-paystack'
+import { PAYSTACK_PUBLIC_KEY } from "../config";
 
 const CheckoutPage = () => {
 
     const { enqueueSnackbar } = useSnackbar();
     const navigate = useNavigate();
-    const { update, setCart } = useAuthContext();    
+    const { update, user, setCart } = useAuthContext();    
 
     const [order, setOrder] = useState<ORDER | null>();
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [paymentDialogOpen, setPaymentDialogOpen] = useState<boolean>(false);
+    // const [paymentDialogOpen, setPaymentDialogOpen] = useState<boolean>(false);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     const [isPaying, setIsPaying] = useState<boolean>(false);
+    const [isValidating, setIsValidating] = useState<boolean>(false); 
+
+    const initializePayment = usePaystackPayment({ 
+        publicKey: PAYSTACK_PUBLIC_KEY || '',
+        currency: 'KES',
+    });
+
+    const validatePaymentHandler = async (ref: any) => {
+        try {
+            const reference = ref.reference;
+            setIsValidating(true);
+            const response = await axiosInstance.post('/validate-payment', { reference, orderId: order?._id });
+            setOrder(response.data.order)
+            enqueueSnackbar(response.data.message, { variant: 'success' });
+        } catch (err: any) {
+            const errorMessage = err?.response?.data?.content || err?.response?.data?.message || err?.message || err || 'Something went wrong';
+            enqueueSnackbar(errorMessage, { variant: 'error' });
+        } finally {
+            setIsValidating(false);
+        }
+    }
+
+    const initializePaymentHandler = async () => {
+        try {
+        setIsPaying(true);
+        initializePayment({
+            config: {
+                email: user?.email || '',
+                phone: user?.phone || '',
+                amount: paymentAmount * 100,
+            },
+            onSuccess: validatePaymentHandler,
+            onClose: () => { enqueueSnackbar('Payment process was closed', { variant: 'info' }) },
+        })
+        } catch (err: any) {
+            const errorMessage = err?.response?.data?.content || err?.response?.data?.message || err?.message || err || 'Something went wrong';
+            enqueueSnackbar(errorMessage, { variant: 'error' });
+        } finally {
+            setIsPaying(false);
+        }
+    }
 
     const createOrderHandler = async () => {
         try {
@@ -37,20 +80,6 @@ const CheckoutPage = () => {
         }
     }
 
-    const stripePayHandler = async (token?: any) => {
-        try {
-            setPaymentDialogOpen(false);
-            setIsPaying(true);
-            await axiosInstance.post(`user/pay`, { token, orderId: order?._id });
-            enqueueSnackbar('Payment success', { variant: 'success' });
-            setOrder(prev => ({ ...prev, status: 'Paid' } as any))
-        } catch (err: any) {
-            enqueueSnackbar(err, { variant: 'error' });
-        } finally {
-            setIsPaying(false);
-        }
-    }
-
     useEffect(() => {
         createOrderHandler();
     }, [])
@@ -61,8 +90,6 @@ const CheckoutPage = () => {
 
   return (
     <>
-
-        <PaymentDialog amount={paymentAmount} closeDialog={() => { setPaymentDialogOpen(false) }} open={paymentDialogOpen} stripePayHandler={stripePayHandler} />
 
         <Stack spacing={3} direction={{ xs: 'column', md: 'row' }} sx={{ mb: { xs: 3, md: 5 }, }} >
             <Stack spacing={1} direction="row" alignItems="flex-start">
@@ -132,7 +159,7 @@ const CheckoutPage = () => {
                     <>
                         <CardHeader title="Payment" />
                         <Stack direction="row" alignItems="center" sx={{ p: 3, typography: 'body2' }}>
-                            {!order?.payment.paid && <LoadingButton loading={isPaying} onClick={() => { setPaymentDialogOpen(true) }} variant="contained">Pay Now</LoadingButton>}
+                            {!order?.payment.paid && <LoadingButton loading={isPaying || isValidating} onClick={initializePaymentHandler} variant="contained">Pay Now</LoadingButton>}
                         </Stack>
                     </>
                 </Card>

@@ -12,10 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchStore = exports.getSingleProduct = exports.getProducts = exports.getSingleCategory = exports.getCategories = exports.main = void 0;
+exports.validatePayment = exports.createOrder = exports.searchStore = exports.getSingleProduct = exports.getProducts = exports.getSingleCategory = exports.getCategories = exports.main = void 0;
 const http_error_1 = __importDefault(require("../models/http-error"));
 const category_1 = __importDefault(require("../models/category"));
 const product_1 = __importDefault(require("../models/product"));
+const order_1 = __importDefault(require("../models/order"));
+const src_1 = require("express-validator/src");
+const axios_1 = __importDefault(require("axios"));
 const main = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         res.status(200).json({ message: 'Batika' });
@@ -90,4 +93,61 @@ const searchStore = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.searchStore = searchStore;
+const createOrder = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { products, firstName, lastName, email, phone } = req.body;
+        const errors = (0, src_1.validationResult)(req);
+        if (!errors.isEmpty())
+            return next(new http_error_1.default('Validation error', errors.array()[0].msg, 422));
+        const orders = yield order_1.default.count();
+        const orderNumber = orders + 1;
+        const newOrder = new order_1.default({
+            number: orderNumber,
+            customer: {
+                firstName,
+                lastName,
+                email,
+                phone
+            },
+            products
+        });
+        yield newOrder.save();
+        res.status(201).json({ message: 'Order created successfully', order: newOrder });
+    }
+    catch (err) {
+        console.log(err);
+        return next(new http_error_1.default('Unable to create order'));
+    }
+});
+exports.createOrder = createOrder;
+const validatePayment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { reference, orderId } = req.body;
+        const foundOrder = yield order_1.default.findById(orderId);
+        if (!foundOrder)
+            return next(new http_error_1.default('Order error', 'Order not found', 404));
+        const requestConfig = {
+            headers: {
+                'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                'Content-Type': 'application/json',
+            }
+        };
+        const response = yield axios_1.default.get(`https://api.paystack.co/transaction/verify/${reference}`, requestConfig);
+        const responseStatus = response.data.data.status;
+        if (responseStatus === 'success') {
+            yield order_1.default.findOneAndUpdate({ _id: orderId }, { $set: { status: 'Paid', 'payment.paid': true, reference } }, { new: true });
+        }
+        else {
+            return next(new http_error_1.default('Verification failed', 'Payment Verification Failed. Please try again', 403));
+        }
+        const updatedOrder = yield order_1.default.findById(orderId);
+        res.status(200).json({ message: 'Order payment completed', order: updatedOrder === null || updatedOrder === void 0 ? void 0 : updatedOrder.toObject() });
+    }
+    catch (err) {
+        console.log(((_a = err === null || err === void 0 ? void 0 : err.response) === null || _a === void 0 ? void 0 : _a.data) || err || 'Something went wrong');
+        return next(new http_error_1.default('Unable to verify order payment'));
+    }
+});
+exports.validatePayment = validatePayment;
 //# sourceMappingURL=main.js.map
